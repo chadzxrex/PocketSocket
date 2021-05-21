@@ -59,11 +59,7 @@
 @synthesize URLRequest=_request;
 
 - (PSWebSocketReadyState)readyState {
-    __block PSWebSocketReadyState value = 0;
-    [self executeWorkAndWait:^{
-        value = _readyState;
-    }];
-    return value;
+    return _readyState;
 }
 
 - (NSData* )remoteAddress {
