@@ -28,16 +28,34 @@
 + (instancetype)sharedNetworkThread {
 	static id sharedNetworkThread = nil;
 	static dispatch_once_t sharedNetworkThreadOnce = 0;
-	dispatch_once(&sharedNetworkThreadOnce, ^{
-		sharedNetworkThread = [[self alloc] init];
-	});
+    @try {
+        dispatch_once(&sharedNetworkThreadOnce, ^{
+		    sharedNetworkThread = [[self alloc] init];
+	    });
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when sharedNetworkThread");
+    }
+    @finally {
+        NSLog(@"sharedNetworkThread finished");
+    }
 	return sharedNetworkThread;
 }
 
 #pragma mark - Properties
 
 - (NSRunLoop *)runLoop {
-    dispatch_group_wait(_waitGroup, DISPATCH_TIME_FOREVER);
+    @try {
+        dispatch_group_wait(_waitGroup, DISPATCH_TIME_FOREVER);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when runLoop");
+    }
+    @finally {
+        NSLog(@"runLoop finished");
+    }
     return _runLoop;
 }
 
@@ -45,9 +63,17 @@
 
 - (instancetype)init {
 	if((self = [super init])) {
-		_waitGroup = dispatch_group_create();
-        dispatch_group_enter(_waitGroup);
-        
+        @try {
+            _waitGroup = dispatch_group_create();
+            dispatch_group_enter(_waitGroup);
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when init");
+        }
+        @finally {
+            NSLog(@"init finished");
+        }
         [self start];
 	}
 	return self;
@@ -55,7 +81,16 @@
 - (void)main {
     @autoreleasepool {
         _runLoop = [NSRunLoop currentRunLoop];
-        dispatch_group_leave(_waitGroup);
+        @try {
+            dispatch_group_leave(_waitGroup);
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when main");
+        }
+        @finally {
+            NSLog(@"main finished");
+        }
         
         NSTimer *timer = [[NSTimer alloc] initWithFireDate:[NSDate distantFuture] interval:0.0 target:self selector:@selector(self) userInfo:nil repeats:NO];
         [_runLoop addTimer:timer forMode:NSDefaultRunLoopMode];

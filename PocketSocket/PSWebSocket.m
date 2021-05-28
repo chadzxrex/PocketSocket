@@ -116,7 +116,17 @@
         _request = [request mutableCopy];
 		_readyState = PSWebSocketReadyStateConnecting;
         NSString* name = [NSString stringWithFormat: @"PSWebSocket <%@>", request.URL];
-        _workQueue = dispatch_queue_create(name.UTF8String, nil);
+        @try {
+           _workQueue = dispatch_queue_create(name.UTF8String, nil);
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when initWithMode");
+        }
+        @finally {
+            NSLog(@"initWithMode finished");
+        }
+        
         if(_mode == PSWebSocketModeClient) {
             _driver = [PSWebSocketDriver clientDriverWithRequest:_request];
         } else {
@@ -273,17 +283,27 @@
         
         // disconnect hard in 30 seconds
         __weak typeof(self)weakSelf = self;
-        dispatch_after(dispatch_walltime(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf)strongSelf = weakSelf;
-            if(!strongSelf) return;
-            
-            [strongSelf executeWork:^{
-                if(strongSelf->_readyState >= PSWebSocketReadyStateClosed) {
-                    return;
-                }
-                [strongSelf disconnect];
-            }];
-        });
+        @try {
+            dispatch_after(dispatch_walltime(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                __strong typeof(weakSelf)strongSelf = weakSelf;
+                if(!strongSelf) return;
+
+                [strongSelf executeWork:^{
+                    if(strongSelf->_readyState >= PSWebSocketReadyStateClosed) {
+                        return;
+                    }
+                    [strongSelf disconnect];
+                }];
+            });
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when closeWithCode");
+        }
+        @finally {
+            NSLog(@"closeWithCode finished");
+        }
+
     }];
 }
 
@@ -331,10 +351,29 @@
     
     // driver
     [_driver start];
-    
     // schedule streams
-    CFReadStreamSetDispatchQueue((__bridge CFReadStreamRef)_inputStream, _workQueue);
-    CFWriteStreamSetDispatchQueue((__bridge CFWriteStreamRef)_outputStream, _workQueue);
+    @try {
+        CFReadStreamSetDispatchQueue((__bridge CFReadStreamRef)_inputStream, _workQueue);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when CF READ");
+    }
+    @finally {
+        NSLog(@"CF READ finished");
+    }
+
+    @try {
+        CFWriteStreamSetDispatchQueue((__bridge CFWriteStreamRef)_outputStream, _workQueue);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when CF Write");
+    }
+    @finally {
+        NSLog(@"CF Write finished");
+    }
+    
     
     // open streams
     if(_inputStream.streamStatus == NSStreamStatusNotOpen) {
@@ -351,16 +390,25 @@
     // prepare timeout
     if(_request.timeoutInterval > 0.0) {
         __weak typeof(self)weakSelf = self;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_request.timeoutInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            __strong typeof(weakSelf)strongSelf = weakSelf;
-            if(strongSelf) {
-                [strongSelf executeWork:^{
-                    if(strongSelf->_readyState == PSWebSocketReadyStateConnecting) {
-                        [strongSelf failWithCode:PSWebSocketErrorCodeTimedOut reason:@"Timed out."];
-                    }
-                }];
-            }
-        });
+        @try {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_request.timeoutInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                __strong typeof(weakSelf)strongSelf = weakSelf;
+                if(strongSelf) {
+                    [strongSelf executeWork:^{
+                        if(strongSelf->_readyState == PSWebSocketReadyStateConnecting) {
+                            [strongSelf failWithCode:PSWebSocketErrorCodeTimedOut reason:@"Timed out."];
+                        }
+                    }];
+                }
+            });
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when connect");
+        }
+        @finally {
+            NSLog(@"connect finished");
+        }
     }
 }
 - (void)disconnectGracefully {
@@ -683,19 +731,56 @@
 
 - (void)executeWork:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_async(_workQueue, work);
+    @try {
+        dispatch_async(_workQueue, work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeWork");
+    }
+    @finally {
+        NSLog(@"executeWork finished");
+    }
+    
 }
 - (void)executeWorkAndWait:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_sync(_workQueue, work);
+    @try {
+        dispatch_sync(_workQueue, work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeWorkAndWait");
+    }
+    @finally {
+        NSLog(@"executeWorkAndWait finished");
+    }
 }
 - (void)executeDelegate:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_async((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    @try {
+        dispatch_async((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeDelegate");
+    }
+    @finally {
+        NSLog(@"executeDelegate finished");
+    }
 }
 - (void)executeDelegateAndWait:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_sync((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    @try {
+        dispatch_sync((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeDelegateAndWait");
+    }
+    @finally {
+        NSLog(@"executeDelegateAndWait finished");
+    }
 }
 
 #pragma mark - Dealloc
