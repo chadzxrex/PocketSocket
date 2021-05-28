@@ -101,7 +101,16 @@ void PSWebSocketServerAcceptCallback(CFSocketRef s, CFSocketCallBackType type, C
 - (instancetype)initWithHost:(NSString *)host port:(NSUInteger)port SSLCertificates:(NSArray *)SSLCertificates {
     NSParameterAssert(port);
     if((self = [super init])) {
-        _workQueue = dispatch_queue_create(nil, nil);
+        @try {
+            _workQueue = dispatch_queue_create(nil, nil);
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when initWithHost");
+        }
+        @finally {
+            NSLog(@"initWithHost finished");
+        }
         
         // copy SSL certificates
         _SSLCertificates = [SSLCertificates copy];
@@ -377,12 +386,21 @@ void PSWebSocketServerAcceptCallback(CFSocketRef s, CFSocketCallBackType type, C
     [connection.outputBuffer appendData:data];
     [self pumpOutput];
     __weak typeof(self)weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), _workQueue, ^{
-        __strong typeof(weakSelf)strongSelf = weakSelf;
-        if(strongSelf) {
-            [strongSelf disconnectConnection:connection];
-        }
-    });
+    @try {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), _workQueue, ^{
+            __strong typeof(weakSelf)strongSelf = weakSelf;
+            if(strongSelf) {
+                [strongSelf disconnectConnection:connection];
+            }
+        });
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when disconnectConnectionGracefully");
+    }
+    @finally {
+        NSLog(@"disconnectConnectionGracefully finished");
+    }
 }
 - (void)disconnectConnection:(PSWebSocketServerConnection *)connection {
     if(connection.readyState == PSWebSocketServerConnectionReadyStateClosed) {
@@ -663,19 +681,56 @@ void PSWebSocketServerAcceptCallback(CFSocketRef s, CFSocketCallBackType type, C
 
 - (void)executeWork:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_async(_workQueue, work);
+    @try {
+        dispatch_async(_workQueue, work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeWork");
+    }
+    @finally {
+        NSLog(@"executeWork finished");
+    }
+    
 }
 - (void)executeWorkAndWait:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_sync(_workQueue, work);
+    @try {
+        dispatch_sync(_workQueue, work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeWorkAndWait");
+    }
+    @finally {
+        NSLog(@"executeWorkAndWait finished");
+    }
 }
 - (void)executeDelegate:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_async((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    @try {
+        dispatch_async((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeDelegate");
+    }
+    @finally {
+        NSLog(@"executeDelegate finished");
+    }
 }
 - (void)executeDelegateAndWait:(void (^)(void))work {
     NSParameterAssert(work);
-    dispatch_sync((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    @try {
+        dispatch_sync((_delegateQueue) ? _delegateQueue : dispatch_get_main_queue(), work);
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+        NSLog(@"Crash when executeDelegateAndWait");
+    }
+    @finally {
+        NSLog(@"executeDelegateAndWait finished");
+    }
 }
 
 #pragma mark - Dealloc

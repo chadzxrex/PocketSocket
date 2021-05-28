@@ -40,7 +40,16 @@
         NSURLRequest *request = [NSURLRequest requestWithURL:URL];
         _webSocket = [PSWebSocket clientSocketWithRequest:request];
         _webSocket.delegate = self;
-        _webSocket.delegateQueue = dispatch_queue_create(nil, nil);
+        @try {
+            _webSocket.delegateQueue = dispatch_queue_create(nil, nil);
+        }
+        @catch (NSException *exception) {
+            NSLog(@"%@", exception.reason);
+            NSLog(@"Crash when initWithURL");
+        }
+        @finally {
+            NSLog(@"initWithURL finished");
+        }
         _isExecuting = NO;
         _isFinished = NO;
     }
