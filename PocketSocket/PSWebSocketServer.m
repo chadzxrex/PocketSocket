@@ -689,7 +689,7 @@ void PSWebSocketServerAcceptCallback(CFSocketRef s, CFSocketCallBackType type, C
         NSLog(@"Crash when executeWork");
     }
     @finally {
-        NSLog(@"executeWork finished");
+        // NSLog(@"executeWork finished");
     }
     
 }
@@ -716,7 +716,7 @@ void PSWebSocketServerAcceptCallback(CFSocketRef s, CFSocketCallBackType type, C
         NSLog(@"Crash when executeDelegate");
     }
     @finally {
-        NSLog(@"executeDelegate finished");
+        // NSLog(@"executeDelegate finished");
     }
 }
 - (void)executeDelegateAndWait:(void (^)(void))work {

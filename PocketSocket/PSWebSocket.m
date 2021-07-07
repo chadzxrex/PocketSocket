@@ -739,7 +739,7 @@
         NSLog(@"Crash when executeWork");
     }
     @finally {
-        NSLog(@"executeWork finished");
+        // NSLog(@"executeWork finished");
     }
     
 }
@@ -766,7 +766,7 @@
         NSLog(@"Crash when executeDelegate");
     }
     @finally {
-        NSLog(@"executeDelegate finished");
+        // NSLog(@"executeDelegate finished");
     }
 }
 - (void)executeDelegateAndWait:(void (^)(void))work {
